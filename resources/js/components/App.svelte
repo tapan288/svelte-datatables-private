@@ -2,7 +2,11 @@
     import { paginate, LightPaginationNav } from "svelte-paginate";
     import { onMount } from "svelte/internal";
 
-    let searchTerm = "";
+    let searchTerm = "",
+        selectedClass = "",
+        selectedSection = "";
+    let classes = [],
+        sections = [];
 
     // pagination related items
     let items = [];
@@ -10,20 +14,38 @@
     let pageSize = 10;
     $: paginatedItems = paginate({ items, pageSize, currentPage });
 
+    $: searchTerm, getStudents();
+    $: selectedSection, getStudents();
+    $: selectedClass,
+        (function () {
+            selectedSection = "";
+            axios
+                .get("/api/sections?class_id=" + selectedClass)
+                .then((response) => {
+                    sections = response.data.data;
+                });
+            getStudents();
+        })();
+
     function getStudents(page = 1) {
         axios
-            .get(`/api/students?page=${currentPage}&q=${searchTerm}`)
+            .get(
+                `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}`
+            )
             .then((response) => {
                 items = response.data.data;
             });
     }
 
-    function search() {
-        getStudents();
+    function getClasses() {
+        axios.get("/api/classes").then((response) => {
+            classes = response.data.data;
+        });
     }
 
     onMount(() => {
         getStudents();
+        getClasses();
     });
 </script>
 
@@ -55,28 +77,42 @@
             <!-- filter by class -->
             <div>
                 <div class="d-flex align-items-center ml-4">
-                    <label for="paginate" class="text-nowrap mr-2 mb-0"
-                        >FilterBy Class</label
+                    <label for="paginate" class="text-nowrap mr-2 mb-0">
+                        FilterBy Class
+                    </label>
+                    <select
+                        class="form-control form-control-sm"
+                        bind:value={selectedClass}
                     >
-                    <select class="form-control form-control-sm">
-                        <option value="">All Class</option>
-                        <option value="1">Class 1</option>
+                        <option value="" selected>All Class</option>
+                        {#each classes as item}
+                            <option value={item.id}>{item.name}</option>
+                        {/each}
                     </select>
                 </div>
             </div>
 
-            <!-- filter by section -->
-            <div>
-                <div class="d-flex align-items-center ml-4">
-                    <label for="paginate" class="text-nowrap mr-2 mb-0"
-                        >Section</label
-                    >
-                    <select class="form-control form-control-sm">
-                        <option value="">Select a Section</option>
-                        <option value="1">Section A</option>
-                    </select>
+            {#if selectedClass}
+                <!-- filter by section -->
+                <div>
+                    <div class="d-flex align-items-center ml-4">
+                        <label for="paginate" class="text-nowrap mr-2 mb-0">
+                            Section
+                        </label>
+                        <select
+                            bind:value={selectedSection}
+                            class="form-control form-control-sm"
+                        >
+                            <option value="">Select a Section</option>
+                            {#each sections as section}
+                                <option value={section.id}>
+                                    {section.name}
+                                </option>
+                            {/each}
+                        </select>
+                    </div>
                 </div>
-            </div>
+            {/if}
 
             <!-- checkbox -->
             <div>
@@ -101,7 +137,6 @@
         <div class="col-md-4">
             <input
                 bind:value={searchTerm}
-                on:keyup={search}
                 type="search"
                 class="form-control"
                 placeholder="Search by name,email,phone,or address..."
