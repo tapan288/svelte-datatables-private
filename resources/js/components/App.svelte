@@ -1,3 +1,23 @@
+<script>
+    import { paginate, LightPaginationNav } from "svelte-paginate";
+    import { onMount } from "svelte/internal";
+
+    let items = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    $: paginatedItems = paginate({ items, pageSize, currentPage });
+
+    function getStudents(page = 1) {
+        axios.get("/api/students?page=" + currentPage).then((response) => {
+            items = response.data.data;
+        });
+    }
+
+    onMount(() => {
+        getStudents();
+    });
+</script>
+
 <div>
     <div class="card">
         <div class="card-header">
@@ -8,9 +28,9 @@
         <div class="d-flex">
             <div>
                 <div class="d-flex align-items-center ml-4">
-                    <label for="paginate" class="text-nowrap mr-2 mb-0"
-                        >Per Page</label
-                    >
+                    <label for="paginate" class="text-nowrap mr-2 mb-0">
+                        Per Page
+                    </label>
                     <select class="form-control form-control-sm">
                         <option value="10">10</option>
                         <option value="20">20</option>
@@ -89,29 +109,39 @@
                     <th>Section</th>
                     <th>Action</th>
                 </tr>
-                <tr>
-                    <td>
-                        <input type="checkbox" />
-                    </td>
-                    <td>Some Name</td>
-                    <td>SomeEmail@example.com</td>
-                    <td>Some Address</td>
-                    <td>9854758587</td>
-                    <td>2021-03-20</td>
-                    <td>Class 1</td>
-                    <td>Section A</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm">
-                            <i class="fa fa-trash" aria-hidden="true" />
-                        </button>
-                    </td>
-                </tr>
+
+                {#each paginatedItems as student}
+                    <tr>
+                        <td>
+                            <input type="checkbox" />
+                        </td>
+                        <td>{student.name}</td>
+                        <td>{student.email}</td>
+                        <td>{student.address}</td>
+                        <td>{student.phone_number}</td>
+                        <td>{student.created_at}</td>
+                        <td>{student.class}</td>
+                        <td>{student.section}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm">
+                                <i class="fa fa-trash" aria-hidden="true" />
+                            </button>
+                        </td>
+                    </tr>
+                {/each}
             </tbody>
         </table>
     </div>
     <div class="row mt-4">
         <div class="col-sm-6 offset-5">
-            <!-- pagination links go here  -->
+            <LightPaginationNav
+                totalItems={items.length}
+                {pageSize}
+                {currentPage}
+                limit={1}
+                showStepOptions={true}
+                on:setPage={(e) => (currentPage = e.detail.page)}
+            />
         </div>
     </div>
 </div>

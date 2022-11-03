@@ -25,6 +25,7 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         $student->delete();
+
         return response()->noContent();
     }
 
@@ -32,12 +33,14 @@ class StudentController extends Controller
     {
         $studentsArray = explode(',', $students);
         Student::whereKey($studentsArray)->delete();
+
         return response()->noContent();
     }
 
     public function export($students)
     {
         $studentsArray = explode(',', $students);
+
         return (new StudentsExport($studentsArray))->download('students.xlsx');
     }
 }
