@@ -31,10 +31,13 @@
                     <label for="paginate" class="text-nowrap mr-2 mb-0">
                         Per Page
                     </label>
-                    <select class="form-control form-control-sm">
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="30">30</option>
+                    <select
+                        bind:value={pageSize}
+                        class="form-control form-control-sm"
+                    >
+                        <option>10</option>
+                        <option>20</option>
+                        <option>30</option>
                     </select>
                 </div>
             </div>
@@ -132,16 +135,14 @@
             </tbody>
         </table>
     </div>
-    <div class="row mt-4">
-        <div class="col-sm-6 offset-5">
-            <LightPaginationNav
-                totalItems={items.length}
-                {pageSize}
-                {currentPage}
-                limit={1}
-                showStepOptions={true}
-                on:setPage={(e) => (currentPage = e.detail.page)}
-            />
-        </div>
+    <div class="mt-4">
+        <LightPaginationNav
+            totalItems={items.length}
+            {pageSize}
+            {currentPage}
+            limit={1}
+            showStepOptions={true}
+            on:setPage={(e) => (currentPage = e.detail.page)}
+        />
     </div>
 </div>
