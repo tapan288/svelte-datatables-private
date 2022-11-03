@@ -2,15 +2,24 @@
     import { paginate, LightPaginationNav } from "svelte-paginate";
     import { onMount } from "svelte/internal";
 
+    let searchTerm = "";
+
+    // pagination related items
     let items = [];
     let currentPage = 1;
     let pageSize = 10;
     $: paginatedItems = paginate({ items, pageSize, currentPage });
 
     function getStudents(page = 1) {
-        axios.get("/api/students?page=" + currentPage).then((response) => {
-            items = response.data.data;
-        });
+        axios
+            .get(`/api/students?page=${currentPage}&q=${searchTerm}`)
+            .then((response) => {
+                items = response.data.data;
+            });
+    }
+
+    function search() {
+        getStudents();
     }
 
     onMount(() => {
@@ -26,6 +35,7 @@
     </div>
     <div class="d-flex justify-content-between align-content-center mb-2">
         <div class="d-flex">
+            <!-- pagination -->
             <div>
                 <div class="d-flex align-items-center ml-4">
                     <label for="paginate" class="text-nowrap mr-2 mb-0">
@@ -41,6 +51,8 @@
                     </select>
                 </div>
             </div>
+
+            <!-- filter by class -->
             <div>
                 <div class="d-flex align-items-center ml-4">
                     <label for="paginate" class="text-nowrap mr-2 mb-0"
@@ -52,6 +64,8 @@
                     </select>
                 </div>
             </div>
+
+            <!-- filter by section -->
             <div>
                 <div class="d-flex align-items-center ml-4">
                     <label for="paginate" class="text-nowrap mr-2 mb-0"
@@ -63,6 +77,8 @@
                     </select>
                 </div>
             </div>
+
+            <!-- checkbox -->
             <div>
                 <div class="dropdown ml-4">
                     <button
@@ -80,14 +96,20 @@
                 </div>
             </div>
         </div>
+
+        <!-- search -->
         <div class="col-md-4">
             <input
+                bind:value={searchTerm}
+                on:keyup={search}
                 type="search"
                 class="form-control"
                 placeholder="Search by name,email,phone,or address..."
             />
         </div>
     </div>
+
+    <!-- currently selected info section -->
     <div class="col-md-10 mt-3 mb-3">
         <div>
             You are currently selecting all <strong>10</strong> items.
@@ -98,6 +120,8 @@
             <a href="#" class="ml-2">Select All</a>
         </div>
     </div>
+
+    <!-- table -->
     <div class="card-body table-responsive p-0">
         <table class="table table-hover">
             <tbody>
@@ -135,6 +159,8 @@
             </tbody>
         </table>
     </div>
+
+    <!-- pagination -->
     <div class="mt-4">
         <LightPaginationNav
             totalItems={items.length}
