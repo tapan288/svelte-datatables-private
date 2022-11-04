@@ -1,6 +1,7 @@
 <script>
     import { paginate, LightPaginationNav } from "svelte-paginate";
     import { onMount } from "svelte/internal";
+    import { SvelteToast, toast } from "@zerodevx/svelte-toast";
 
     // pagination related items
     let items = [];
@@ -45,6 +46,7 @@
     function deleteSingleRecord(student_id) {
         axios.delete(`/api/student/${student_id}/delete/`).then((response) => {
             checked = checked.filter((id) => id != student_id);
+            toast.push("Student record deleted successfully");
             getStudents();
         });
     }
@@ -54,6 +56,7 @@
             .delete(`/api/students/${checked}/massDestroy/`)
             .then((response) => {
                 if (response.status == 204) {
+                    toast.push("Selected Students were Deleted Successfully");
                     checked = [];
                     getStudents();
                 }
@@ -229,6 +232,16 @@
                             </button>
                         </td>
                     </tr>
+                {:else}
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 {/each}
             </tbody>
         </table>
@@ -246,3 +259,5 @@
         />
     </div>
 </div>
+
+<SvelteToast />
