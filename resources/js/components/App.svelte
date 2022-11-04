@@ -2,17 +2,20 @@
     import { paginate, LightPaginationNav } from "svelte-paginate";
     import { onMount } from "svelte/internal";
 
-    let searchTerm = "",
-        selectedClass = "",
-        selectedSection = "";
-    let classes = [],
-        sections = [];
-
     // pagination related items
     let items = [];
     let currentPage = 1;
     let pageSize = 10;
     $: paginatedItems = paginate({ items, pageSize, currentPage });
+
+    let searchTerm = "",
+        selectedClass = "",
+        selectedSection = "",
+        studentsUrl = `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}`;
+
+    let classes = [],
+        sections = [],
+        checked = [];
 
     $: searchTerm, getStudents();
     $: selectedSection, getStudents();
@@ -27,20 +30,34 @@
             getStudents();
         })();
 
-    function getStudents(page = 1) {
-        axios
-            .get(
-                `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}`
-            )
-            .then((response) => {
-                items = response.data.data;
-            });
+    function getStudents() {
+        axios.get(studentsUrl).then((response) => {
+            items = response.data.data;
+        });
     }
 
     function getClasses() {
         axios.get("/api/classes").then((response) => {
             classes = response.data.data;
         });
+    }
+
+    function deleteSingleRecord(student_id) {
+        axios.delete(`/api/student/${student_id}/delete/`).then((response) => {
+            checked = checked.filter((id) => id != student_id);
+            getStudents();
+        });
+    }
+
+    function deleteRecords() {
+        axios
+            .delete(`/api/students/${checked}/massDestroy/`)
+            .then((response) => {
+                if (response.status == 204) {
+                    checked = [];
+                    getStudents();
+                }
+            });
     }
 
     onMount(() => {
@@ -114,23 +131,33 @@
                 </div>
             {/if}
 
-            <!-- checkbox -->
-            <div>
-                <div class="dropdown ml-4">
-                    <button
-                        class="btn btn-secondary dropdown-toggle"
-                        data-toggle="dropdown"
-                    >
-                        With Checked (1)
-                    </button>
-                    <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item" type="button">
-                            Delete
-                        </a>
-                        <a class="dropdown-item" type="button"> Export </a>
+            {#if checked.length > 0}
+                <!-- checkbox -->
+                <div>
+                    <div class="dropdown ml-4">
+                        <button
+                            class="btn btn-secondary dropdown-toggle"
+                            data-toggle="dropdown"
+                        >
+                            With Checked ({checked.length})
+                        </button>
+                        <div class="dropdown-menu">
+                            <button
+                                on:click={() =>
+                                    confirm(
+                                        "Are you sure you wanna delete this Record?"
+                                    ) || event.stopImmediatePropagation()}
+                                class="dropdown-item"
+                                type="button"
+                                on:click={deleteRecords}
+                            >
+                                Delete
+                            </button>
+                            <a class="dropdown-item" type="button"> Export </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            {/if}
         </div>
 
         <!-- search -->
@@ -172,10 +199,14 @@
                     <th>Action</th>
                 </tr>
 
-                {#each paginatedItems as student}
+                {#each paginatedItems as student (student.id)}
                     <tr>
                         <td>
-                            <input type="checkbox" />
+                            <input
+                                type="checkbox"
+                                value={student.id}
+                                bind:group={checked}
+                            />
                         </td>
                         <td>{student.name}</td>
                         <td>{student.email}</td>
@@ -185,7 +216,15 @@
                         <td>{student.class}</td>
                         <td>{student.section}</td>
                         <td>
-                            <button class="btn btn-danger btn-sm">
+                            <button
+                                on:click={() => {
+                                    confirm(
+                                        "Are you sure you wanna delete this Record?"
+                                    ) || event.stopImmediatePropagation();
+                                }}
+                                class="btn btn-danger btn-sm"
+                                on:click={deleteSingleRecord(student.id)}
+                            >
                                 <i class="fa fa-trash" aria-hidden="true" />
                             </button>
                         </td>

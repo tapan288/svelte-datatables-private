@@ -44,7 +44,7 @@ class Student extends Model
         $selectedClass = request('selectedClass');
         $selectedSection = request('selectedSection');
 
-        $sort_direction = request('sort_direction', 'desc');
+        $sort_direction = request('sort_direction', 'asc');
 
         if (!in_array($sort_direction, ['asc', 'desc'])) {
             $sort_direction = 'desc';
