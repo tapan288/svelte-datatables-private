@@ -148,8 +148,8 @@
                 </div>
             {/if}
 
+            <!-- checkbox -->
             {#if checked.length > 0}
-                <!-- checkbox -->
                 <div>
                     <div class="dropdown ml-4">
                         <button
@@ -170,7 +170,13 @@
                             >
                                 Delete
                             </button>
-                            <a class="dropdown-item" type="button"> Export </a>
+                            <a
+                                href={`api/students/${checked}/export`}
+                                class="dropdown-item"
+                                type="button"
+                            >
+                                Export
+                            </a>
                         </div>
                     </div>
                 </div>
