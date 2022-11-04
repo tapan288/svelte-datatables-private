@@ -7,29 +7,33 @@
     let items = [];
     let currentPage = 1;
     let pageSize = 10;
-    $: paginatedItems = paginate({ items, pageSize, currentPage });
 
     let searchTerm = "",
         selectedClass = "",
-        selectedSection = "",
-        studentsUrl = `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}`;
+        sort_direction = "desc",
+        sort_field = "created_at",
+        selectedSection = "";
 
     let classes = [],
         sections = [],
         checked = [];
 
-    $: searchTerm, getStudents();
-    $: selectedSection, getStudents();
+    $: studentsUrl = `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}&sort_direction=${sort_direction}&sort_field=${sort_field}`;
+    $: studentsUrl, getStudents();
+
     $: selectedClass,
         (function () {
-            selectedSection = "";
-            axios
-                .get("/api/sections?class_id=" + selectedClass)
-                .then((response) => {
-                    sections = response.data.data;
-                });
-            getStudents();
+            if (selectedClass) {
+                selectedSection = "";
+                axios
+                    .get("/api/sections?class_id=" + selectedClass)
+                    .then((response) => {
+                        sections = response.data.data;
+                    });
+            }
         })();
+
+    $: paginatedItems = paginate({ items, pageSize, currentPage });
 
     function getStudents() {
         axios.get(studentsUrl).then((response) => {
@@ -61,6 +65,16 @@
                     getStudents();
                 }
             });
+    }
+
+    function change_sort(field) {
+        if (sort_field == field) {
+            sort_direction = sort_direction == "asc" ? "desc" : "asc";
+        } else {
+            sort_field = field;
+        }
+
+        console.log(studentsUrl);
     }
 
     onMount(() => {
@@ -192,11 +206,74 @@
             <tbody>
                 <tr>
                     <th><input type="checkbox" /></th>
-                    <th> Student's Name </th>
-                    <th> Email </th>
-                    <th> Address </th>
-                    <th> Phone Number </th>
-                    <th> Created At </th>
+                    <th>
+                        <a
+                            href="#"
+                            on:click|preventDefault={() => change_sort("name")}
+                        >
+                            Student's Name
+                        </a>
+                        {#if sort_direction == "desc" && sort_field == "name"}
+                            <span>&uarr;</span>
+                        {:else if sort_direction == "asc" && sort_field == "name"}
+                            <span>&darr;</span>
+                        {/if}
+                    </th>
+                    <th>
+                        <a
+                            href="#"
+                            on:click|preventDefault={() => change_sort("email")}
+                        >
+                            Email
+                        </a>
+                        {#if sort_direction == "desc" && sort_field == "email"}
+                            <span>&uarr;</span>
+                        {:else if sort_direction == "asc" && sort_field == "email"}
+                            <span>&darr;</span>
+                        {/if}
+                    </th>
+                    <th>
+                        <a
+                            href="#"
+                            on:click|preventDefault={() =>
+                                change_sort("address")}
+                        >
+                            Address
+                        </a>
+                        {#if sort_direction == "desc" && sort_field == "address"}
+                            <span>&uarr;</span>
+                        {:else if sort_direction == "asc" && sort_field == "address"}
+                            <span>&darr;</span>
+                        {/if}
+                    </th>
+                    <th>
+                        <a
+                            href="#"
+                            on:click|preventDefault={() =>
+                                change_sort("phone_number")}
+                        >
+                            Phone Number
+                        </a>
+                        {#if sort_direction == "desc" && sort_field == "phone_number"}
+                            <span>&uarr;</span>
+                        {:else if sort_direction == "asc" && sort_field == "phone_number"}
+                            <span>&darr;</span>
+                        {/if}
+                    </th>
+                    <th>
+                        <a
+                            href="#"
+                            on:click|preventDefault={() =>
+                                change_sort("created_at")}
+                        >
+                            Created At
+                        </a>
+                        {#if sort_direction == "desc" && sort_field == "created_at"}
+                            <span>&uarr;</span>
+                        {:else if sort_direction == "asc" && sort_field == "created_at"}
+                            <span>&darr;</span>
+                        {/if}
+                    </th>
                     <th>Class</th>
                     <th>Section</th>
                     <th>Action</th>
