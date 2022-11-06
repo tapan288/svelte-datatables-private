@@ -12,7 +12,9 @@
         selectedClass = "",
         sort_direction = "desc",
         sort_field = "created_at",
-        selectedSection = "";
+        selectedSection = "",
+        selectPage = false,
+        selectAll = false;
 
     let classes = [],
         sections = [],
@@ -20,6 +22,23 @@
 
     $: studentsUrl = `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}&sort_direction=${sort_direction}&sort_field=${sort_field}`;
     $: studentsUrl, getStudents();
+
+    $: selectPageUpdated(selectPage);
+
+    function selectPageUpdated(selectPage) {
+        if (!selectPage) {
+            checked = [];
+            // fix this bug later
+            selectAll = false;
+            // selectPage = false;
+        }
+
+        if (selectPage) {
+            paginatedItems.forEach((item) => {
+                checked = [...checked, item.id];
+            });
+        }
+    }
 
     $: selectedClass,
         (function () {
@@ -75,6 +94,14 @@
         }
 
         console.log(studentsUrl);
+    }
+
+    function selectAllRecords() {
+        checked = [];
+        items.forEach((student) => {
+            checked = [...checked, student.id];
+        });
+        selectAll = true;
     }
 
     onMount(() => {
@@ -197,12 +224,18 @@
     <!-- currently selected info section -->
     <div class="col-md-10 mt-3 mb-3">
         <div>
-            You are currently selecting all <strong>10</strong> items.
-        </div>
-        <div>
-            You have selected <strong>10</strong> items, Do you want to Select
-            All <strong>25</strong> items?
-            <a href="#" class="ml-2">Select All</a>
+            <!-- fix the OR condition check later -->
+            {#if selectAll || items.length == checked.length}
+                You are currently selecting all <strong>{items.length}</strong> items.
+            {:else if selectPage}
+                You have selected <strong>{checked.length}</strong> items, Do
+                you want to Select All <strong>{items.length}</strong> items?
+                <a
+                    on:click|preventDefault={selectAllRecords}
+                    href="#"
+                    class="ml-2">Select All</a
+                >
+            {/if}
         </div>
     </div>
 
@@ -211,7 +244,7 @@
         <table class="table table-hover">
             <tbody>
                 <tr>
-                    <th><input type="checkbox" /></th>
+                    <th><input type="checkbox" bind:checked={selectPage} /></th>
                     <th>
                         <a
                             href="#"
@@ -285,7 +318,7 @@
                     <th>Action</th>
                 </tr>
 
-                {#each paginatedItems as student (student.id)}
+                {#each paginatedItems as student, i (student.id)}
                     <tr>
                         <td>
                             <input
