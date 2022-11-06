@@ -25,21 +25,6 @@
 
     $: selectPageUpdated(selectPage);
 
-    function selectPageUpdated(selectPage) {
-        if (!selectPage) {
-            checked = [];
-            // fix this bug later
-            selectAll = false;
-            // selectPage = false;
-        }
-
-        if (selectPage) {
-            paginatedItems.forEach((item) => {
-                checked = [...checked, item.id];
-            });
-        }
-    }
-
     $: selectedClass,
         (function () {
             if (selectedClass) {
@@ -58,6 +43,23 @@
         axios.get(studentsUrl).then((response) => {
             items = response.data.data;
         });
+    }
+
+    function selectPageUpdated(selectPage) {
+        if (!selectPage) {
+            checked = [];
+            // fix this bug later
+            selectAll = false;
+            // selectPage = false;
+        }
+
+        if (selectPage) {
+            // fix this later
+            checked = [];
+            paginatedItems.forEach((item) => {
+                checked = [...checked, item.id];
+            });
+        }
     }
 
     function getClasses() {
@@ -243,7 +245,7 @@
     <div class="card-body table-responsive p-0">
         <table class="table table-hover">
             <tbody>
-                <tr>
+                <tr class={selectPage || selectAll ? "table-primary" : ""}>
                     <th><input type="checkbox" bind:checked={selectPage} /></th>
                     <th>
                         <a
@@ -319,7 +321,11 @@
                 </tr>
 
                 {#each paginatedItems as student, i (student.id)}
-                    <tr>
+                    <tr
+                        class={checked.includes(student.id)
+                            ? "table-primary"
+                            : ""}
+                    >
                         <td>
                             <input
                                 type="checkbox"
