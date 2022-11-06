@@ -1,5 +1,4 @@
 <script>
-    import { paginate, LightPaginationNav } from "svelte-paginate";
     import { onMount } from "svelte/internal";
     import { SvelteToast, toast } from "@zerodevx/svelte-toast";
 
@@ -9,9 +8,11 @@
     let pageSize = 10;
 
     let searchTerm = "",
+        links = [],
+        meta = [],
         selectedClass = "",
-        sort_direction = "desc",
-        sort_field = "created_at",
+        sort_direction = "asc",
+        sort_field = "name",
         selectedSection = "",
         selectPage = false,
         selectAll = false;
@@ -20,7 +21,8 @@
         sections = [],
         checked = [];
 
-    $: studentsUrl = `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}&sort_direction=${sort_direction}&sort_field=${sort_field}`;
+    $: studentsUrl = `/api/students?page=${currentPage}&q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}&sort_direction=${sort_direction}&sort_field=${sort_field}&paginate=${pageSize}`;
+    $: studentsUrlWithoutPagination = `/api/students?q=${searchTerm}&selectedClass=${selectedClass}&selectedSection=${selectedSection}&sort_direction=${sort_direction}&sort_field=${sort_field}`;
     $: studentsUrl, getStudents();
 
     $: selectPageUpdated(selectPage);
@@ -37,11 +39,11 @@
             }
         })();
 
-    $: paginatedItems = paginate({ items, pageSize, currentPage });
-
     function getStudents() {
         axios.get(studentsUrl).then((response) => {
             items = response.data.data;
+            meta = response.data.meta;
+            links = meta.links;
         });
     }
 
@@ -56,7 +58,7 @@
         if (selectPage) {
             // fix this later
             checked = [];
-            paginatedItems.forEach((item) => {
+            items.forEach((item) => {
                 checked = [...checked, item.id];
             });
         }
@@ -99,11 +101,18 @@
     }
 
     function selectAllRecords() {
-        checked = [];
-        items.forEach((student) => {
-            checked = [...checked, student.id];
+        axios.get(studentsUrlWithoutPagination).then((response) => {
+            checked = [];
+            response.data.data.forEach((student) => {
+                checked = [...checked, student.id];
+                selectAll = true;
+            });
         });
-        selectAll = true;
+    }
+
+    function updatePagination(url) {
+        let stringLength = url.length;
+        currentPage = url.charAt(stringLength - 1);
     }
 
     onMount(() => {
@@ -227,11 +236,11 @@
     <div class="col-md-10 mt-3 mb-3">
         <div>
             <!-- fix the OR condition check later -->
-            {#if selectAll || items.length == checked.length}
-                You are currently selecting all <strong>{items.length}</strong> items.
+            {#if selectAll || meta.total == checked.length}
+                You are currently selecting all <strong>{meta.total}</strong> items.
             {:else if selectPage}
                 You have selected <strong>{checked.length}</strong> items, Do
-                you want to Select All <strong>{items.length}</strong> items?
+                you want to Select All <strong>{meta.total}</strong> items?
                 <a
                     on:click|preventDefault={selectAllRecords}
                     href="#"
@@ -320,7 +329,7 @@
                     <th>Action</th>
                 </tr>
 
-                {#each paginatedItems as student, i (student.id)}
+                {#each items as student, i (student.id)}
                     <tr
                         class={checked.includes(student.id)
                             ? "table-primary"
@@ -370,16 +379,26 @@
     </div>
 
     <!-- pagination -->
-    <div class="mt-4">
-        <LightPaginationNav
-            totalItems={items.length}
-            {pageSize}
-            {currentPage}
-            limit={1}
-            showStepOptions={true}
-            on:setPage={(e) => (currentPage = e.detail.page)}
-        />
-    </div>
+    <nav aria-label="Page navigation example" class="my-4 mx-5">
+        <ul class="pagination justify-content-end">
+            {#each links as link}
+                <li
+                    class="page-item {link.active || !link.url
+                        ? 'disabled'
+                        : ''}"
+                >
+                    <a
+                        class="page-link"
+                        href="#"
+                        on:click|preventDefault={() =>
+                            updatePagination(link.url)}
+                    >
+                        {@html link.label}
+                    </a>
+                </li>
+            {/each}
+        </ul>
+    </nav>
 </div>
 
 <SvelteToast />

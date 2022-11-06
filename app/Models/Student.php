@@ -50,9 +50,9 @@ class Student extends Model
             $sort_direction = 'asc';
         }
 
-        $sort_field = request('sort_field', 'created_at');
+        $sort_field = request('sort_field', 'name');
         if (!in_array($sort_field, ['name', 'email', 'address', 'phone_number', 'created_at'])) {
-            $sort_field = 'created_at';
+            $sort_field = 'name';
         }
 
         $query->with(['class', 'section'])
