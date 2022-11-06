@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Student extends Model
 {
@@ -47,7 +47,7 @@ class Student extends Model
         $sort_direction = request('sort_direction', 'asc');
 
         if (!in_array($sort_direction, ['asc', 'desc'])) {
-            $sort_direction = 'desc';
+            $sort_direction = 'asc';
         }
 
         $sort_field = request('sort_field', 'created_at');
