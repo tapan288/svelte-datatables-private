@@ -96,8 +96,6 @@
         } else {
             sort_field = field;
         }
-
-        console.log(studentsUrl);
     }
 
     function selectAllRecords() {
@@ -111,8 +109,7 @@
     }
 
     function updatePagination(url) {
-        let stringLength = url.length;
-        currentPage = url.charAt(stringLength - 1);
+        currentPage = url.split("=")[1];
     }
 
     onMount(() => {
